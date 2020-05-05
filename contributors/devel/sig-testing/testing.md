@@ -48,17 +48,6 @@ passing, so it is often a good idea to make sure the e2e tests work as well.
 cd kubernetes
 make test  # Run all unit tests.
 ```
-If you have `GOPATH` set up correctly, you can
-also just use `go test` directly.
-
-```sh
-cd kubernetes
-go test ./... # Run all unit tests
-```
-
-The remainder of this documentation presumes that you use `Make` as an
-entry point, but remember that the ability to use `go test` exists should you
-desire.
 
 If any unit test fails with a timeout panic (see [#1594](https://github.com/kubernetes/community/issues/1594)) on the testing package, you can increase the `KUBE_TIMEOUT` value as shown below.
 
@@ -78,12 +67,6 @@ added automatically to these:
 
 ```sh
 make test WHAT=./pkg/kubelet                # run tests for pkg/kubelet
-```
-
-Expressed strictly with `go test`, the above command is equivalent to the following:
-
-```sh
-go test ./pkg/kubelet
 ```
 
 To run tests for a package and all of its subpackages, you need to append `...`
@@ -108,8 +91,8 @@ make test WHAT=./pkg/{kubelet,scheduler}  # run tests for pkg/kubelet and pkg/sc
 ### Run specific unit test cases in a package
 
 You can set the test args using the `KUBE_TEST_ARGS` environment variable.
-You can use this to pass the `-run` argument to `go test`, which accepts a
-regular expression for the name of the test that should be run.
+You can use this to pass the `-run` argument to `go test`, which is used 
+internally and accepts a regular expression for the name of the test that should be run.
 
 ```sh
 # Runs TestValidatePod in pkg/api/validation with the verbose flag set
@@ -117,12 +100,6 @@ make test WHAT=./pkg/apis/core/validation GOFLAGS="-v" KUBE_TEST_ARGS='-run ^Tes
 
 # Runs tests that match the regex ValidatePod|ValidateConfigMap in pkg/api/validation
 make test WHAT=./pkg/apis/core/validation GOFLAGS="-v" KUBE_TEST_ARGS="-run ValidatePod\|ValidateConfigMap$"
-```
-
-Or if we are using `go test` as our entry point, we could run:
-
-```sh
-go test ./pkg/apis/core/validation -v -run ^TestValidatePods$
 ```
 
 For other supported test flags, see the [golang
@@ -171,12 +148,6 @@ To run benchmark tests, you'll typically use something like:
 make test WHAT=./pkg/scheduler/internal/cache KUBE_TEST_ARGS='-benchmem -run=XXX -bench=BenchmarkExpirePods'
 ```
 
-Alternatively, to express in pure Go, you could write the following:
-
-```sh
-go test ./pkg/scheduler/internal/cache -benchmem -run=XXX -bench=Benchmark
-```
-
 This will do the following:
 
 1. `-run=XXX` is a regular expression filter on the name of test cases to run.
@@ -188,6 +159,33 @@ This will do the following:
 3. `-benchmem` enables memory allocation stats
 
 See `go help test` and `go help testflag` for additional info.
+
+### Running unit tests using go test directly (without Make)
+
+If you have `GOPATH` set up correctly, you can use `go test` directly to run individual tests 
+or all tests within a package. 
+
+To run all unit tests from a certain package, you could run:
+
+```sh
+go test ./pkg/kubelet
+```
+
+Or to run specific unit test cases in a package, you could run:
+
+```sh
+go test ./pkg/apis/core/validation -v -run ^TestValidatePods$
+```
+
+To run benchmark tests, you could run:
+
+```sh
+go test ./pkg/scheduler/internal/cache -benchmem -run=XXX -bench=Benchmark
+```
+
+Running all unit tests from the root Kubernetes directory, for example `go test ./...`, 
+should not be done because there are some tests within the directory structure that are 
+not meant to be run this way and are specifically excluded by `make test`.
 
 ## Integration tests
 
